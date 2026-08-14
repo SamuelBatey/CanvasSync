@@ -1,4 +1,5 @@
 using CanvasSync.Data;
+using CanvasSync.Hubs;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BoardContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BoardContext")));
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -30,6 +32,10 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.UseEndpoints(endpoints => {
+    endpoints.MapHub<BoardHub>("/board");
+});
 
 app.MapControllerRoute(
     name: "default",

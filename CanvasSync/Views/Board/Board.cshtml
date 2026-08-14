@@ -8,10 +8,16 @@
     <canvas id="whiteboard" width="800" height="600" style="border:1px solid #000; cursor:crosshair;"></canvas>
 </div>
 
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/board").build();
+    connection.start().catch(function (err){
+        return console.error(err.toString());
+    })
+
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
-    const eraser = document.getElementById('eraser');
+    const eraserBox = document.getElementById('eraser');
 
     let drawing = false;
 
@@ -40,25 +46,32 @@
 
     function draw(e) {
         if (drawing) {
-            // Change to erase if the eraser is checked
-            if (eraser.checked) {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = 20;
-            } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.lineWidth = 5;
-            }
+            drawLine(posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked);
+            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked).catch(function (err) {
+                return console.error(err.toString());
+            });
+            updateInitialMousePos(e);
 
-            ctx.lineCap = 'round';
-
-            ctx.beginPath();
-
-            ctx.moveTo(posX, posY);
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-
-            ctx.closePath();
-            updateInitialMousePos(e)
         }
     }
+
+    function drawLine(startX, startY, endX, endY, thickness, eraser) {
+        if (eraser === true) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 20;
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.lineWidth = 5;
+        }
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    connection.on("ReceiveBoard", function (startX, startY, endX, endY, thickness, eraser) {
+        drawLine(startX, startY, endX, endY, thickness, eraser);
+    });
 </script>
