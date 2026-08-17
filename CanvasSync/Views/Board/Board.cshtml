@@ -1,6 +1,10 @@
-﻿@{
+﻿@model CanvasSync.Models.Board
+
+@{
     ViewData["Title"] = "Board";
 }
+
+<p id="BoardId" data-code="@Model.ID">@Html.DisplayFor(model=>model.ID)</p>
 
 <input type="checkbox" id="eraser" />
 <label for="eraser">Eraser</label>
@@ -13,7 +17,9 @@
     var connection = new signalR.HubConnectionBuilder().withUrl("/board").build();
     connection.start().catch(function (err){
         return console.error(err.toString());
-    })
+    }).then(res =>{
+        connection.invoke("AddToGroup", document.getElementById("BoardId").dataset.code)
+    });
 
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
@@ -47,7 +53,7 @@
     function draw(e) {
         if (drawing) {
             drawLine(posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked);
-            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked).catch(function (err) {
+            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked, document.getElementById("BoardId").dataset.code).catch(function(err) {
                 return console.error(err.toString());
             });
             updateInitialMousePos(e);
