@@ -12,11 +12,13 @@ namespace CanvasSync.Controllers {
             _context = context;
         }
 
+        [Route("Board/GetBoard")]
         [HttpPost]
         public async Task<IActionResult> GetBoard(string ID) {
             return RedirectToAction("Board", new { ID = ID });
         }
 
+        [Route("Board/SaveLine")]
         [HttpPost]
         public async Task<IActionResult> SaveLine([FromBody] Line line) {
             if(string.IsNullOrEmpty(line.BoardID)) {
@@ -33,7 +35,7 @@ namespace CanvasSync.Controllers {
             return Ok();
         }
 
-        [Route("Board/Board/{id?}")]
+        [Route("Board/{id?}")]
         public async Task<IActionResult> Board(string? id) {
             if(id == null) {
                 return NotFound();
@@ -45,6 +47,7 @@ namespace CanvasSync.Controllers {
             return View(board);
         }
 
+        [Route("Board/Create")]
         public async Task<IActionResult> Create() {
             Board board = new Board();
             board.ID = Guid.NewGuid().ToString().Substring(0,5);
