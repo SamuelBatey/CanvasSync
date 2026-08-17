@@ -14,18 +14,26 @@
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script>
+    const code = document.getElementById("BoardId").dataset.code
+
     var connection = new signalR.HubConnectionBuilder().withUrl("/board").build();
     connection.start().catch(function (err){
         return console.error(err.toString());
     }).then(res =>{
-        connection.invoke("AddToGroup", document.getElementById("BoardId").dataset.code)
+        connection.invoke("AddToGroup", code)
     });
 
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
     const eraserBox = document.getElementById('eraser');
 
+    let lines = @Json.Serialize(Model.Lines);
+    lines.forEach(line => {
+        line.strokes.forEach(stroke => drawStroke(stroke.startX, stroke.startY, stroke.endX, stroke.endY, stroke.thickness, stroke.isEraser));
+    });
+
     let drawing = false;
+    let line = { Strokes: [], BoardID: code }
 
     // Variables for storing the position of the mouse at the beginning of the stroke
     let posX = 0;
@@ -36,13 +44,29 @@
         drawing = true;
     });
 
-    canvas.addEventListener('mouseup', () => {
+    canvas.addEventListener('mouseup', async () => {
         drawing = false;
+        await sendLine();
     });
 
     canvas.addEventListener('mousemove', (e) => {
         draw(e);
     });
+
+    async function sendLine() {
+        try {
+            const response = await fetch("/Board/SaveLine", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(line)
+            });
+        } catch(error) {
+            console.error("Could not save to database: ", error);
+        };
+        line = { Strokes: [], BoardID: code };
+    }
 
     function updateInitialMousePos(e) {
         // offsetX and offsetY are the x and y coords of the mouse relative to the target element, in this case meaning the coords inside the canvas
@@ -52,16 +76,23 @@
 
     function draw(e) {
         if (drawing) {
-            drawLine(posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked);
-            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked, document.getElementById("BoardId").dataset.code).catch(function(err) {
+            drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked);
+            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked, code).catch(function(err) {
                 return console.error(err.toString());
             });
+            let stroke = { StartX: posX,
+                           StartY: posY,
+                           EndX: e.offsetX,
+                           EndY: e.offsetY,
+                           Thickness: 5,
+                           IsEraser: eraserBox.checked };
+            line.Strokes.push(stroke);
             updateInitialMousePos(e);
-
         }
     }
 
-    function drawLine(startX, startY, endX, endY, thickness, eraser) {
+    function drawStroke(startX, startY, endX, endY, thickness, eraser) {
+        //console.log(startX + "," + startY + "," + endX + "," + endY + "," + thickness + "," + eraser);
         if (eraser === true) {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.lineWidth = 20;
@@ -78,6 +109,6 @@
     }
 
     connection.on("ReceiveBoard", function (startX, startY, endX, endY, thickness, eraser) {
-        drawLine(startX, startY, endX, endY, thickness, eraser);
+        drawStroke(startX, startY, endX, endY, thickness, eraser);
     });
 </script>

@@ -2,6 +2,7 @@
 using CanvasSync.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace CanvasSync.Controllers {
     public class BoardController : Controller {
@@ -16,12 +17,28 @@ namespace CanvasSync.Controllers {
             return RedirectToAction("Board", new { ID = ID });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SaveLine([FromBody] Line line) {
+            if(string.IsNullOrEmpty(line.BoardID)) {
+                return BadRequest();
+            }
+            var boardToUpdate = await _context.Boards.FirstOrDefaultAsync(b => b.ID == line.BoardID);
+            if(boardToUpdate == null) {
+                return NotFound();
+            }
+            boardToUpdate.Lines.Add(line);
+            _context.Update(boardToUpdate);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [Route("Board/Board/{id?}")]
         public async Task<IActionResult> Board(string? id) {
             if(id == null) {
                 return NotFound();
             }
-            var board = await _context.Boards.FirstOrDefaultAsync(m => m.ID == id);
+            var board = await _context.Boards.Include(b => b.Lines).ThenInclude(l => l.Strokes).FirstOrDefaultAsync(m => m.ID == id);
             if(board == null) {
                 return NotFound();
             }
@@ -33,7 +50,7 @@ namespace CanvasSync.Controllers {
             board.ID = Guid.NewGuid().ToString().Substring(0,5);
             board.DateCreated = DateTime.Now;
             board.LastModified = DateTime.Now;
-            board.CanvasDataURL = "temp";
+            board.Lines = new List<Line>();
 
             _context.Add(board);
             await _context.SaveChangesAsync();
