@@ -3,13 +3,26 @@
 @{
     ViewData["Title"] = "Board";
 }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
-<p id="BoardId" data-code="@Model.ID">@Html.DisplayFor(model=>model.ID)</p>
 
-<input type="checkbox" id="eraser" />
-<label for="eraser">Eraser</label>
+<div class="row justify-content-between" style="width:1216px">
+    <div class="col-auto">
+        <button id="pencilButton" onclick="pencilTool()" class="toolButtonSelected" disabled><i id="pencilIcon" class="bi bi-pencil"></i></button>
+        <button id="eraserButton" onclick="eraserTool()" class="toolButton"><i id="eraserIcon" class="bi bi-eraser"></i></button>
+    </div>
+    <div class="col-auto align-self-end">
+        <span id="BoardId" class="shareCode" data-code="@Model.ID">Share Code: @Html.DisplayFor(model => model.ID)</span>
+    </div>
+</div>
+
+
+
+
+
+
 <div class="whiteboard-container">
-    <canvas id="whiteboard" width="800" height="600" style="border:1px solid #000; cursor:crosshair;"></canvas>
+    <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair;"></canvas>
 </div>
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
@@ -23,9 +36,11 @@
         connection.invoke("AddToGroup", code)
     });
 
+    const pencilToolBtn = document.getElementById("pencilButton");
+    const eraserToolBtn = document.getElementById("eraserButton");
+
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
-    const eraserBox = document.getElementById('eraser');
 
     let lines = @Json.Serialize(Model.Lines);
     lines.forEach(line => {
@@ -33,6 +48,7 @@
     });
 
     let drawing = false;
+    let eraserEnabled = false;
     let line = { Strokes: [], BoardID: code }
 
     // Variables for storing the position of the mouse at the beginning of the stroke
@@ -76,8 +92,8 @@
 
     function draw(e) {
         if (drawing) {
-            drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked);
-            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserBox.checked, code).catch(function(err) {
+            drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled);
+            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled, code).catch(function(err) {
                 return console.error(err.toString());
             });
             let stroke = { StartX: posX,
@@ -85,7 +101,8 @@
                            EndX: e.offsetX,
                            EndY: e.offsetY,
                            Thickness: 5,
-                           IsEraser: eraserBox.checked };
+                           IsEraser: eraserEnabled
+                         };
             line.Strokes.push(stroke);
             updateInitialMousePos(e);
         }
@@ -111,4 +128,33 @@
     connection.on("ReceiveBoard", function (startX, startY, endX, endY, thickness, eraser) {
         drawStroke(startX, startY, endX, endY, thickness, eraser);
     });
+
+    function eraserTool() {
+        setEraserToolSelected(true);
+        setPencilToolSelected(false);
+    }
+
+    function pencilTool() {
+        setEraserToolSelected(false);
+        setPencilToolSelected(true);
+    }
+
+    function setPencilToolSelected(val) {
+        if(val === true){
+            pencilToolBtn.classList.replace("toolButton", "toolButtonSelected");
+        } else {
+            pencilToolBtn.classList.replace("toolButtonSelected", "toolButton");
+        }
+        pencilToolBtn.disabled = val;
+    }
+
+    function setEraserToolSelected(val) {
+        if (val === true) {
+            eraserToolBtn.classList.replace("toolButton", "toolButtonSelected");
+        } else {
+            eraserToolBtn.classList.replace("toolButtonSelected", "toolButton");
+        }
+        eraserToolBtn.disabled = val;
+        eraserEnabled = val;
+    }
 </script>
