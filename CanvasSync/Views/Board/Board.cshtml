@@ -17,13 +17,10 @@
 </div>
 
 
-
-
-
-
 <div class="whiteboard-container">
     <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair;"></canvas>
 </div>
+
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script>
@@ -61,6 +58,11 @@
     });
 
     canvas.addEventListener('mouseup', async () => {
+        drawing = false;
+        await sendLine();
+    });
+
+    canvas.addEventListener('mouseleave', async () => {
         drawing = false;
         await sendLine();
     });
