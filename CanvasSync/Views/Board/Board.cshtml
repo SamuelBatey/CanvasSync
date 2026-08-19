@@ -32,6 +32,8 @@
         return console.error(err.toString());
     }).then(res =>{
         connection.invoke("AddToGroup", code)
+    }).catch(function(err) {
+        console.error("SignalR failed to start: ", err.toString());
     });
 
     const pencilToolBtn = document.getElementById("pencilButton");
