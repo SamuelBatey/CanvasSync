@@ -48,7 +48,7 @@ jobs:
     - name: Azure Login
       uses: azure/login@v2
       with:
-        client-id: ${{ vars.CanvasSync_CLIENT_ID_A6CA }}
+        client-id: ${{ secrets.CanvasSync_CLIENT_ID_A6CA }}
         tenant-id: ${{ vars.CanvasSync_TENANT_ID_A6CA }}
         subscription-id: ${{ vars.CanvasSync_SUBSCRIPTION_ID_A6CA }}
     - name: Deploy to Azure WebApp
