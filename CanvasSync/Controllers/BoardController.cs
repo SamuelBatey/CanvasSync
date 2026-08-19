@@ -21,13 +21,17 @@ namespace CanvasSync.Controllers {
         [Route("Board/SaveLine")]
         [HttpPost]
         public async Task<IActionResult> SaveLine([FromBody] Line line) {
-            if(string.IsNullOrEmpty(line.BoardID)) {
+            if(string.IsNullOrEmpty(line.BoardID) || line == null) {
                 return BadRequest();
             }
-            var boardToUpdate = await _context.Boards.FirstOrDefaultAsync(b => b.ID == line.BoardID);
+            var boardToUpdate = await _context.Boards.Include(b => b.Lines).FirstOrDefaultAsync(b => b.ID == line.BoardID);
+
             if(boardToUpdate == null) {
                 return NotFound();
             }
+
+            line.Strokes ??= new List<Stroke>();
+
             boardToUpdate.Lines.Add(line);
             _context.Update(boardToUpdate);
             await _context.SaveChangesAsync();
