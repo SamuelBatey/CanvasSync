@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BoardContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BoardContext")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionString")));
 builder.Services.AddSignalR();
 builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]!);
 
