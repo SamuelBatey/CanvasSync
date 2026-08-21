@@ -25,7 +25,7 @@ namespace CanvasSync.Controllers {
         [HttpPost]
         public async Task<IActionResult> SaveLine([FromBody] Line line) {
             // Check data isn't null
-            if(string.IsNullOrEmpty(line.BoardID) || line == null) return BadRequest();
+            if(line == null || string.IsNullOrEmpty(line.BoardID)) return BadRequest();
 
             // Try to get the board from the database
             var boardToUpdate = await _context.Boards.Include(b => b.Lines).FirstOrDefaultAsync(b => b.ID == line.BoardID);
