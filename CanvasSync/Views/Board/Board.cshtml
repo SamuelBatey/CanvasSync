@@ -98,7 +98,7 @@
     function draw(e) {
         if (drawing) {
             drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled);
-            connection.invoke("SendBoard", posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled, code).catch(function(err) {
+            connection.invoke("SendStroke", posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled, code).catch(function(err) {
                 return console.error(err.toString());
             });
             let stroke = { StartX: posX,
@@ -130,7 +130,7 @@
         ctx.closePath();
     }
 
-    connection.on("ReceiveBoard", function (startX, startY, endX, endY, thickness, eraser) {
+    connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser) {
         drawStroke(startX, startY, endX, endY, thickness, eraser);
     });
 
