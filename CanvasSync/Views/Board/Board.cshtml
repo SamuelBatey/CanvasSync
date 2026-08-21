@@ -6,7 +6,7 @@
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
-
+@*Toolbar row above canvas*@
 <div class="row justify-content-between" style="width:1216px">
     <div class="col-auto">
         <button id="pencilButton" onclick="pencilTool()" class="toolButtonSelected" disabled><i id="pencilIcon" class="bi bi-pencil"></i></button>
@@ -17,7 +17,7 @@
     </div>
 </div>
 
-
+@*Canavs*@
 <div class="whiteboard-container">
     <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair;"></canvas>
 </div>
@@ -25,8 +25,10 @@
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script>
+    // Board code
     const code = document.getElementById("BoardId").dataset.code
 
+    // Create and start connection, then add client to board group
     var connection = new signalR.HubConnectionBuilder().withUrl("/board").build();
     connection.start().catch(function (err){
         return console.error(err.toString());
@@ -36,25 +38,34 @@
         console.error("SignalR failed to start: ", err.toString());
     });
 
+    // Pencil and eraser tool elements
     const pencilToolBtn = document.getElementById("pencilButton");
     const eraserToolBtn = document.getElementById("eraserButton");
 
+    // Canvas and canvas context
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
 
+    // Get the list of lines that is already on the board
     let lines = @Html.Raw(JsonSerializer.Serialize(Model.Lines, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+    
+    // For each stroke in each line, draw it on the canvas. This updates the canvas to reflect what is in the database on page load
     lines.forEach(line => {
         line.strokes.forEach(stroke => drawStroke(stroke.startX, stroke.startY, stroke.endX, stroke.endY, stroke.thickness, stroke.isEraser));
     });
 
+    // drawing stores if we are in the middle of drawing a line
     let drawing = false;
     let eraserEnabled = false;
+
+    // Initialise new line object to store the current line being drawn
     let line = { Strokes: [], BoardID: code }
 
     // Variables for storing the position of the mouse at the beginning of the stroke
     let posX = 0;
     let posY = 0;
 
+    // Add event listeners for drawing
     canvas.addEventListener('mousedown', (e) => {
         updateInitialMousePos(e);
         drawing = true;
@@ -74,6 +85,7 @@
         draw(e);
     });
 
+    // Sends the line currently stored in the line variable to the controller for saving in the database
     async function sendLine() {
         try {
             const response = await fetch("/Board/SaveLine", {
@@ -86,6 +98,8 @@
         } catch(error) {
             console.error("Could not save to database: ", error);
         };
+
+        // Reset the line object, ready for the next line
         line = { Strokes: [], BoardID: code };
     }
 
@@ -95,12 +109,18 @@
         posY = e.offsetY;
     }
 
+    // Called when a stroke needs to be drawn. Handles keeping track of stroke data and sending that data to other clients
     function draw(e) {
         if (drawing) {
+            // Draw the stroke
             drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled);
+
+            // Send the stroke data to the other clients in the group
             connection.invoke("SendStroke", posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled, code).catch(function(err) {
-                return console.error(err.toString());
+                return console.error("Failed to send stroke: " + err.toString());
             });
+
+            // Create a stroke object with the data about the stroke we just drew
             let stroke = { StartX: posX,
                            StartY: posY,
                            EndX: e.offsetX,
@@ -108,13 +128,18 @@
                            Thickness: 5,
                            IsEraser: eraserEnabled
                          };
+            // Add that stroke object to the current line being drawn
             line.Strokes.push(stroke);
+
+            // Update the initial mouse position, ready for the next stroke
             updateInitialMousePos(e);
         }
     }
 
+    // Handles the actual drawing of a stroke on the canvas
     function drawStroke(startX, startY, endX, endY, thickness, eraser) {
-        //console.log(startX + "," + startY + "," + endX + "," + endY + "," + thickness + "," + eraser);
+        // Set the stroke thickness and draw type (i.e. eraser, pen)
+        // TODO: Make the lineWidth use the actual value from the thickness property instead of just hardcoding values
         if (eraser === true) {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.lineWidth = 20;
@@ -122,6 +147,8 @@
             ctx.globalCompositeOperation = 'source-over';
             ctx.lineWidth = 5;
         }
+
+        // Draw the line for the stroke
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(startX, startY);
@@ -130,20 +157,25 @@
         ctx.closePath();
     }
 
+    // On receiving data for a stroke, draw that stroke directly on the screen.
+    // Bypass all other logic handled in the draw() function since that is already being done by the client that sent the stroke
     connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser) {
         drawStroke(startX, startY, endX, endY, thickness, eraser);
     });
 
+    // Runs when the eraser tool is selected
     function eraserTool() {
         setEraserToolSelected(true);
         setPencilToolSelected(false);
     }
 
+    // Runs when the pencil tool is selected
     function pencilTool() {
         setEraserToolSelected(false);
         setPencilToolSelected(true);
     }
 
+    // Make the pencil tool selected or deselected
     function setPencilToolSelected(val) {
         if(val === true){
             pencilToolBtn.classList.replace("toolButton", "toolButtonSelected");
@@ -153,6 +185,7 @@
         pencilToolBtn.disabled = val;
     }
 
+    // Make the eraser tool selected or deselected
     function setEraserToolSelected(val) {
         if (val === true) {
             eraserToolBtn.classList.replace("toolButton", "toolButtonSelected");
