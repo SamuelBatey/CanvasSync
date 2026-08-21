@@ -19,7 +19,7 @@
 
 @*Canavs*@
 <div class="whiteboard-container">
-    <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair;"></canvas>
+    <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair; touch-action:none;"></canvas>
 </div>
 
 
@@ -50,9 +50,14 @@
     let lines = @Html.Raw(JsonSerializer.Serialize(Model.Lines, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
     
     // For each stroke in each line, draw it on the canvas. This updates the canvas to reflect what is in the database on page load
-    lines.forEach(line => {
-        line.strokes.forEach(stroke => drawStroke(stroke.startX, stroke.startY, stroke.endX, stroke.endY, stroke.thickness, stroke.isEraser));
-    });
+    function redrawAllLines() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lines.forEach(lineObj => {
+            lineObj.strokes.forEach(s => {
+                drawStroke(s.startX, s.startY, s.endX, s.endY, s.thickness, s.isEraser);
+            });
+        });
+    }
 
     // drawing stores if we are in the middle of drawing a line
     let drawing = false;
@@ -66,22 +71,22 @@
     let posY = 0;
 
     // Add event listeners for drawing
-    canvas.addEventListener('mousedown', (e) => {
+    canvas.addEventListener('pointerdown', (e) => {
         updateInitialMousePos(e);
         drawing = true;
     });
 
-    canvas.addEventListener('mouseup', async () => {
+    canvas.addEventListener('pointerup', async () => {
         drawing = false;
         await sendLine();
     });
 
-    canvas.addEventListener('mouseleave', async () => {
+    canvas.addEventListener('pointerleave', async () => {
         drawing = false;
         await sendLine();
     });
 
-    canvas.addEventListener('mousemove', (e) => {
+    canvas.addEventListener('pointermove', (e) => {
         draw(e);
     });
 
@@ -104,27 +109,28 @@
     }
 
     function updateInitialMousePos(e) {
-        // offsetX and offsetY are the x and y coords of the mouse relative to the target element, in this case meaning the coords inside the canvas
-        posX = e.offsetX;
-        posY = e.offsetY;
+        const p = getPosFromEvent(e);
+        posX = p.x;
+        posY = p.y;
     }
 
     // Called when a stroke needs to be drawn. Handles keeping track of stroke data and sending that data to other clients
     function draw(e) {
         if (drawing) {
+            const p = getPosFromEvent(e);
             // Draw the stroke
-            drawStroke(posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled);
+            drawStroke(posX, posY, p.x, p.y, 5, eraserEnabled);
 
             // Send the stroke data to the other clients in the group
-            connection.invoke("SendStroke", posX, posY, e.offsetX, e.offsetY, 5, eraserEnabled, code).catch(function(err) {
+            connection.invoke("SendStroke", posX, posY, p.x, p.y, 5, eraserEnabled, code).catch(function(err) {
                 return console.error("Failed to send stroke: " + err.toString());
             });
 
             // Create a stroke object with the data about the stroke we just drew
             let stroke = { StartX: posX,
                            StartY: posY,
-                           EndX: e.offsetX,
-                           EndY: e.offsetY,
+                           EndX: p.x,
+                           EndY: p.y,
                            Thickness: 5,
                            IsEraser: eraserEnabled
                          };
@@ -195,4 +201,32 @@
         eraserToolBtn.disabled = val;
         eraserEnabled = val;
     }
+
+    function getPosFromEvent(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length > 0) {
+            return { x: Math.round(e.touches[0].clientX - rect.left), y: Math.round(e.touches[0].clientY - rect.top) };
+        } else if (typeof e.clientX === 'number') {
+            return { x: Math.round(e.clientX - rect.left), y: Math.round(e.clientY - rect.top) };
+        } else if (typeof e.offsetX === 'number') {
+            return { x: Math.round(e.offsetX), y: Math.round(e.offsetY) };
+        }
+        return { x: 0, y: 0 };
+    }
+
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        // Backing store matches logical size * DPR for crisp rendering
+        canvas.width = Math.round(1200 * dpr);
+        canvas.height = Math.round(700 * dpr);
+        // Keep CSS display size equal to logical pixels
+        canvas.style.width = 1200 + 'px';
+        canvas.style.height = 700 + 'px';
+        // Scale context so we can draw and accept pointer coords in logical (CSS) pixels
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Redraw any saved lines (your redrawAllLines uses logical coords)
+        redrawAllLines();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 </script>
