@@ -33,6 +33,8 @@ namespace CanvasSync.Controllers {
             line.Strokes ??= new List<Stroke>();
 
             boardToUpdate.Lines.Add(line);
+            boardToUpdate.LastModified = DateTime.Now;
+
             _context.Update(boardToUpdate);
             await _context.SaveChangesAsync();
 
