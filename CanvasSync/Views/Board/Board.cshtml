@@ -171,7 +171,18 @@
     // On receiving data for a stroke, draw that stroke directly on the screen.
     // Bypass all other logic handled in the draw() function since that is already being done by the client that sent the stroke
     connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser) {
+        console.log("stroke")
+        let newLine = { strokes: [{
+                            startX: startX,
+                            startY: startY,
+                            endX: endX,
+                            endY: endY,
+                            thickness: thickness,
+                            eraser: eraser
+                        }],
+                        boardID: code }
         drawStroke(startX, startY, endX, endY, thickness, eraser);
+        lines.push(newLine);
     });
 
     // Runs when the eraser tool is selected
