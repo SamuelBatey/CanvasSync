@@ -12,6 +12,9 @@ namespace CanvasSync.Controllers {
             _context = context;
         }
 
+        public IActionResult Index() {
+            return View();
+        }
         // Redirects to the Board view with the specified ID
         [Route("Board/GetBoard")]
         [HttpPost]

@@ -41,7 +41,7 @@ app.UseEndpoints(endpoints => {
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Board}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 

@@ -1,4 +1,6 @@
-﻿@{
+﻿@model IndexViewModel
+
+@{
     ViewData["Title"] = "Home Page";
 }
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -9,10 +11,11 @@
              <a asp-controller="Board" asp-action="Create" class="btn btn-primary">New Board</a> 
         </div>
         <div class="col-3 existingBoardPanel p-3">
-            <form asp-controller="Board" asp-action="GetBoard" method="post">
+            <form asp-controller="Board" asp-action="FindBoard" method="post">
                 <div class="d-flex flex-column justify-content-evenly gap-2 align-items-center">
                     <label class="form-label" for="ID">Enter Board Code:</label>
                     <input class="form-control" type="text" id="ID" name="ID" />
+                    <span class="text-danger" asp-validation-for="ID"></span>
                     <button type="submit" value="Enter" class="btn btn-primary">Enter</button>
                 </div>
             </form>
