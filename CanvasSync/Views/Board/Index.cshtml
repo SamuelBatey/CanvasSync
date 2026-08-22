@@ -14,8 +14,9 @@
             <form asp-controller="Board" asp-action="FindBoard" method="post">
                 <div class="d-flex flex-column justify-content-evenly gap-2 align-items-center">
                     <label class="form-label" for="ID">Enter Board Code:</label>
-                    <input class="form-control" type="text" id="ID" name="ID" />
+                    <input class="form-control" type="text" id="ID" name="ID" value="@ViewBag.ID" />
                     <span class="text-danger" asp-validation-for="ID"></span>
+
                     <button type="submit" value="Enter" class="btn btn-primary">Enter</button>
                 </div>
             </form>

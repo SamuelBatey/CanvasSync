@@ -15,12 +15,21 @@ namespace CanvasSync.Controllers {
         public IActionResult Index() {
             return View();
         }
+
         // Redirects to the Board view with the specified ID
-        [Route("Board/GetBoard")]
+        [Route("Board/FindBoard")]
         [HttpPost]
-        public async Task<IActionResult> GetBoard(string ID) {
+        public async Task<IActionResult> FindBoard(IndexViewModel model) {
             // TODO: Check if the given ID corresponds to an existing board in the database
-            return RedirectToAction("Board", new { ID = ID });
+            var board = await _context.Boards.FirstOrDefaultAsync(b => b.ID == model.ID);
+            if (board == null) ModelState.AddModelError("ID", "Board does not exist");
+
+            if (!ModelState.IsValid) {
+                ViewBag.ID = model.ID;
+                return View("Index",model);
+            }
+
+            return RedirectToAction("Board", new { ID = model.ID });
         }
 
         // Saves a line in the database
