@@ -48,11 +48,9 @@
 
     // Get the list of lines that is already on the board
     let lines = @Html.Raw(JsonSerializer.Serialize(Model.Lines, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
-    console.log(lines);
     
     // For each stroke in each line, draw it on the canvas. This updates the canvas to reflect what is in the database on page load
     function redrawAllLines() {
-        console.log(lines);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lines.forEach(lineObj => {
             lineObj.strokes.forEach(s => {
@@ -171,7 +169,6 @@
     // On receiving data for a stroke, draw that stroke directly on the screen.
     // Bypass all other logic handled in the draw() function since that is already being done by the client that sent the stroke
     connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser) {
-        console.log("stroke")
         let newLine = { strokes: [{
                             startX: startX,
                             startY: startY,
