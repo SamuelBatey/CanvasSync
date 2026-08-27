@@ -62,15 +62,11 @@ jobs:
 
       - name: Run Database Migrations
         shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7AE80EB7CBCC4A7F8547AE755CCBC3DA }}
+          AZURE_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_3A530B4FB7804FA69A9427C39C1EBD62 }}
         run: |
-          # 1. Fetch the active database access token from Azure CLI
-          $azureToken = az account get-access-token --resource "https://database.windows.net/" --query "accessToken" -o tsv
-          
-          # 2. Append the token to your connection string variable
-          $fullConnectionString = "${{ secrets.AZURE_SQL_CONNECTION_STRING }}" + $azureToken
-          
-          # 3. Execute the migration bundle using the combined string
-          ./efbundle.exe --connection "$fullConnectionString"
+          ./efbundle.exe --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}"
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
