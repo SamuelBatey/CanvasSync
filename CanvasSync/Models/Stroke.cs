@@ -9,6 +9,7 @@ namespace CanvasSync.Models {
         public int EndY { get; set; }
         public int Thickness { get; set; }
         public bool IsEraser { get; set; }
+        public string Color { get; set; } = "#000000";
 
         // Navigation property for the line this stroke is a part of
         // JsonIgnore is needed to prevent loop when encoding stroke data to Json

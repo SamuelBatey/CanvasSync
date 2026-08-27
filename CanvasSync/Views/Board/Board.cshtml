@@ -11,6 +11,7 @@
     <div class="col-auto">
         <button id="pencilButton" onclick="pencilTool()" class="toolButtonSelected" disabled><i id="pencilIcon" class="bi bi-pencil"></i></button>
         <button id="eraserButton" onclick="eraserTool()" class="toolButton"><i id="eraserIcon" class="bi bi-eraser"></i></button>
+        <input id="colorPicker" type="color" value="#000000"/>
     </div>
     <div class="col-auto align-self-end">
         <span id="BoardId" class="shareCode" data-code="@Model.ID">Share Code: @Html.DisplayFor(model => model.ID)</span>
@@ -41,6 +42,7 @@
     // Pencil and eraser tool elements
     const pencilToolBtn = document.getElementById("pencilButton");
     const eraserToolBtn = document.getElementById("eraserButton");
+    const colorPicker = document.getElementById("colorPicker");
 
     // Canvas and canvas context
     const canvas = document.getElementById('whiteboard');
@@ -54,7 +56,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lines.forEach(lineObj => {
             lineObj.strokes.forEach(s => {
-                drawStroke(s.startX, s.startY, s.endX, s.endY, s.thickness, s.isEraser);
+                drawStroke(s.startX, s.startY, s.endX, s.endY, s.thickness, s.isEraser, s.color);
             });
         });
     }
@@ -122,10 +124,10 @@
         if (drawing) {
             const p = getPosFromEvent(e);
             // Draw the stroke
-            drawStroke(posX, posY, p.x, p.y, 5, eraserEnabled);
+            drawStroke(posX, posY, p.x, p.y, 5, eraserEnabled, colorPicker.value);
 
             // Send the stroke data to the other clients in the group
-            connection.invoke("SendStroke", posX, posY, p.x, p.y, 5, eraserEnabled, code).catch(function(err) {
+            connection.invoke("SendStroke", posX, posY, p.x, p.y, 5, eraserEnabled, colorPicker.value, code).catch(function(err) {
                 return console.error("Failed to send stroke: " + err.toString());
             });
 
@@ -135,7 +137,8 @@
                            endX: p.x,
                            endY: p.y,
                            thickness: 5,
-                           isEraser: eraserEnabled
+                           isEraser: eraserEnabled,
+                           color: colorPicker.value
                          };
             // Add that stroke object to the current line being drawn
             line.strokes.push(stroke);
@@ -146,7 +149,7 @@
     }
 
     // Handles the actual drawing of a stroke on the canvas
-    function drawStroke(startX, startY, endX, endY, thickness, eraser) {
+    function drawStroke(startX, startY, endX, endY, thickness, eraser, color) {
         // Set the stroke thickness and draw type (i.e. eraser, pen)
         // TODO: Make the lineWidth use the actual value from the thickness property instead of just hardcoding values
         if (eraser === true) {
@@ -159,6 +162,7 @@
 
         // Draw the line for the stroke
         ctx.lineCap = 'round';
+        ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
@@ -168,17 +172,18 @@
 
     // On receiving data for a stroke, draw that stroke directly on the screen.
     // Bypass all other logic handled in the draw() function since that is already being done by the client that sent the stroke
-    connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser) {
+    connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser, color) {
         let newLine = { strokes: [{
                             startX: startX,
                             startY: startY,
                             endX: endX,
                             endY: endY,
                             thickness: thickness,
-                            eraser: eraser
+                            eraser: eraser,
+                            color: color
                         }],
                         boardID: code }
-        drawStroke(startX, startY, endX, endY, thickness, eraser);
+        drawStroke(startX, startY, endX, endY, thickness, eraser, color);
         lines.push(newLine);
     });
 

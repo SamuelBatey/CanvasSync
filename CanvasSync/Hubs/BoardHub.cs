@@ -4,8 +4,8 @@ namespace CanvasSync.Hubs {
     public class BoardHub : Hub {
 
         // Sends the stroke to all other clients in the board group
-        public async Task SendStroke(int startX, int startY, int endX, int endY, int thickness, bool eraser, string group) {
-            await Clients.OthersInGroup(group).SendAsync("ReceiveStroke", startX, startY, endX, endY, thickness, eraser);
+        public async Task SendStroke(int startX, int startY, int endX, int endY, int thickness, bool eraser, string color, string group) {
+            await Clients.OthersInGroup(group).SendAsync("ReceiveStroke", startX, startY, endX, endY, thickness, eraser, color);
         }
 
         // Adds the client to the given board group
