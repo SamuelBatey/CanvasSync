@@ -26,6 +26,11 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
+      - name: Create EF Migration Bundle
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations bundle --self-contained --force -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
+
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
@@ -54,6 +59,11 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7AE80EB7CBCC4A7F8547AE755CCBC3DA }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3A530B4FB7804FA69A9427C39C1EBD62 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EF131621FFB9400D8021F354FFD166CE }}
+
+      - name: Run Database Migrations
+        shell: pwsh
+        run: |
+          ./efbundle.exe --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}"
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
