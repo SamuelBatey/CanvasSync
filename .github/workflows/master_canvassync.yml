@@ -62,6 +62,9 @@ jobs:
 
       - name: Run Database Migrations
         shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7AE80EB7CBCC4A7F8547AE755CCBC3DA }}
+          AZURE_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_3A530B4FB7804FA69A9427C39C1EBD62 }}
         run: |
           ./efbundle.exe --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}"
 
