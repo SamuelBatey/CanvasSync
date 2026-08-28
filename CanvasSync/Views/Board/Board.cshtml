@@ -91,9 +91,11 @@
     });
 
     async function finishLine() {
+        // Reset drawing state, store the new line locally, then send it to the server
         drawing = false;
         lines.push(line)
         await sendLine();
+
         // Reset the line object, ready for the next line
         line = { strokes: [], boardID: code };
     }
@@ -113,6 +115,7 @@
         };
     }
 
+    // Used to store the mouse position at the start of a draw event
     function updateInitialMousePos(e) {
         const p = getPosFromEvent(e);
         posX = p.x;
@@ -160,9 +163,11 @@
             ctx.lineWidth = 5;
         }
 
-        // Draw the line for the stroke
+        // Set stroke values
         ctx.lineCap = 'round';
         ctx.strokeStyle = color;
+
+        // Draw the path
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
@@ -173,6 +178,9 @@
     // On receiving data for a stroke, draw that stroke directly on the screen.
     // Bypass all other logic handled in the draw() function since that is already being done by the client that sent the stroke
     connection.on("ReceiveStroke", function (startX, startY, endX, endY, thickness, eraser, color) {
+
+        // Since we don't know any info about the line this stroke belongs to, we just create a new line with a single stroke
+        // This is only for storing the stroke locally. The client that sent the stroke has all info for it's line and that is what gets saved to the database
         let newLine = { strokes: [{
                             startX: startX,
                             startY: startY,
@@ -220,31 +228,47 @@
         eraserEnabled = val;
     }
 
+    // Gets x,y values from the given event
     function getPosFromEvent(e) {
         const rect = canvas.getBoundingClientRect();
+        // Check if the event has touches, then get the x,y coord from the touch
         if (e.touches && e.touches.length > 0) {
             return { x: Math.round(e.touches[0].clientX - rect.left), y: Math.round(e.touches[0].clientY - rect.top) };
+        // Check if the event has a clientX property, then get the x,y coord from the mouse
         } else if (typeof e.clientX === 'number') {
             return { x: Math.round(e.clientX - rect.left), y: Math.round(e.clientY - rect.top) };
+        // Check if the event has an offsetX property, then use that as the x,y coord
         } else if (typeof e.offsetX === 'number') {
             return { x: Math.round(e.offsetX), y: Math.round(e.offsetY) };
         }
+
+        // Fallback to 0,0 in case all checks fail
         return { x: 0, y: 0 };
     }
 
+    // Resize canvas to keep coordinates consistent on devices with different device pixel ratios
     function resizeCanvas() {
+        // Get the device pixel ratio, fallback to 1 if that fails
         const dpr = window.devicePixelRatio || 1;
-        // Backing store matches logical size * DPR for crisp rendering
+
+        // Resize the canvas to the set size
         canvas.width = Math.round(1200 * dpr);
         canvas.height = Math.round(700 * dpr);
+
         // Keep CSS display size equal to logical pixels
         canvas.style.width = 1200 + 'px';
         canvas.style.height = 700 + 'px';
+
         // Scale context so we can draw and accept pointer coords in logical (CSS) pixels
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        // Redraw any saved lines (your redrawAllLines uses logical coords)
+
+        // Redraw any saved lines that would have been wiped when the canvas resized
         redrawAllLines();
     }
+
+    // Resize the canvas whenever the window resizes
     window.addEventListener('resize', resizeCanvas);
+
+    // Do a one-time canvas resize to fit the current window at launch
     resizeCanvas();
 </script>
