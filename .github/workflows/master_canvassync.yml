@@ -29,7 +29,7 @@ jobs:
       #- name: Create EF Migration Bundle
       #  run: |
       #    dotnet tool install --global dotnet-ef
-      #    dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
+      #    dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"g
 
       - name: Find Index.cshtml
         shell: pwsh
