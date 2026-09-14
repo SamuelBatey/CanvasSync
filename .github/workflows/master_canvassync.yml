@@ -24,29 +24,15 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build CanvasSync/CanvasSync.csproj --configuration Release
 
       #- name: Create EF Migration Bundle
       #  run: |
       #    dotnet tool install --global dotnet-ef
-      #    dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"g
-
-      - name: Check source Index page
-        shell: pwsh
-        run: |
-          Write-Host "===== SOURCE INDEX.CSHTML ====="
-          Get-Content "CanvasSync/Views/Board/Index.cshtml"
-          Write-Host "=============================="
+      #    dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
-
-      - name: Check published Index page
-        shell: pwsh
-        run: |
-          Write-Host "===== SEARCHING PUBLISHED APP ====="
-          Get-ChildItem "${{env.DOTNET_ROOT}}/myapp" -Recurse -File |
-            Select-String -Pattern "NOTE: Boards may take up to 60 seconds to load after a period of inactivity because the Azure SQL database uses a serverless tier and may need to wake up."
+        run: dotnet publish CanvasSync/CanvasSync.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
