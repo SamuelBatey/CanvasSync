@@ -26,10 +26,15 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Create EF Migration Bundle
+      #- name: Create EF Migration Bundle
+      #  run: |
+      #    dotnet tool install --global dotnet-ef
+      #    dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
+
+      - name: Check source Index page
+        shell: pwsh
         run: |
-          dotnet tool install --global dotnet-ef
-          dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
+          Get-Content "CanvasSync/Views/Home/Index.cshtml"
 
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
