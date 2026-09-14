@@ -41,6 +41,13 @@ jobs:
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
+      - name: Check published Index page
+        shell: pwsh
+        run: |
+          Write-Host "===== SEARCHING PUBLISHED APP ====="
+          Get-ChildItem "${{env.DOTNET_ROOT}}/myapp" -Recurse -File |
+            Select-String -Pattern "NOTE"
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
