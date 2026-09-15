@@ -57,6 +57,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+
+      - name: Verify downloaded artifact
+        shell: pwsh
+        run: |
+          Get-Item .\CanvasSync.dll | Select-Object FullName, Length, LastWriteTime
+          Get-FileHash .\CanvasSync.dll -Algorithm SHA256
       
       - name: Login to Azure
         uses: azure/login@v2
