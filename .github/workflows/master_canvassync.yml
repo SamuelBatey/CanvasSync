@@ -26,10 +26,10 @@ jobs:
       - name: Build with dotnet
         run: dotnet build CanvasSync/CanvasSync.csproj --configuration Release
 
-       - name: Create EF Migration Bundle
-         run: |
-           dotnet tool install --global dotnet-ef
-           dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
+      - name: Create EF Migration Bundle
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations bundle --self-contained --force --project CanvasSync/CanvasSync.csproj -o "${{env.DOTNET_ROOT}}/myapp/efbundle.exe"
 
       - name: dotnet publish
         run: dotnet publish CanvasSync/CanvasSync.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
