@@ -34,11 +34,6 @@ jobs:
       - name: dotnet publish
         run: dotnet publish CanvasSync/CanvasSync.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
-      - name: Hash published application
-        shell: pwsh
-        run: |
-          Get-FileHash "${{env.DOTNET_ROOT}}/myapp/CanvasSync.dll" -Algorithm SHA256
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -57,21 +52,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-
-      - name: Verify downloaded artifact
-        shell: pwsh
-        run: |
-          Write-Host "Current directory:"
-          Get-Location
-
-          Write-Host "`nDownloaded files:"
-          Get-ChildItem -Recurse -File | Select-Object FullName, Length, LastWriteTime
-
-          Write-Host "`nCanvasSync.dll:"
-          Get-ChildItem -Recurse -File -Filter "CanvasSync.dll" | ForEach-Object {
-            Write-Host "Found: $($_.FullName)"
-            Get-FileHash $_.FullName -Algorithm SHA256
-          }
       
       - name: Login to Azure
         uses: azure/login@v2
