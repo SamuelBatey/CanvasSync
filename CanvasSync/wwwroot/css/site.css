@@ -40,6 +40,7 @@ body {
     border: 2px solid gray;
     border-radius: 10px;
     margin: 15px;
+    min-height:144px;
 }
 
 .createBoardButton {
@@ -69,4 +70,39 @@ body {
 
 .shareCode {
     font-size:22px;
+}
+
+.whiteboard-viewport {
+    width: 100%;
+    max-width: 1200px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    padding: 0px;
+}
+
+#whiteboard {
+    width: 1200px;
+    height: 700px;
+    display: block;
+}
+
+#panSlider {
+    width: 90%;
+    margin: 8px auto;
+    padding: 0px;
+    accent-color: cornflowerblue;
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+.toolbar {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0px;
 }

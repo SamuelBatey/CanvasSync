@@ -7,19 +7,22 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
 @*Toolbar row above canvas*@
-<div class="row justify-content-between" style="width:1216px">
-    <div class="col-auto">
+<div class="row justify-content-between toolbar">
+    <div class="col-auto" style="padding:0px;">
         <button id="pencilButton" onclick="pencilTool()" class="toolButtonSelected" disabled><i id="pencilIcon" class="bi bi-pencil"></i></button>
         <button id="eraserButton" onclick="eraserTool()" class="toolButton"><i id="eraserIcon" class="bi bi-eraser"></i></button>
         <input id="colorPicker" type="color" value="#000000"/>
     </div>
-    <div class="col-auto align-self-end">
+    <div class="col-auto align-self-end" style="padding:0px;">
         <span id="BoardId" class="shareCode" data-code="@Model.ID">Share Code: @Html.DisplayFor(model => model.ID)</span>
     </div>
 </div>
 
+@* Pan Slider *@
+<input id="panSlider" type="range" min="0" max="100" value="50" />
+
 @*Canavs*@
-<div class="whiteboard-container">
+<div class="whiteboard-viewport" id="whiteboardViewport">
     <canvas id="whiteboard" width="1200" height="700" style="border:1px solid #000; cursor:crosshair; touch-action:none;"></canvas>
 </div>
 
@@ -39,10 +42,12 @@
         console.error("SignalR failed to start: ", err.toString());
     });
 
-    // Pencil and eraser tool elements
+    // Get references to toolbar elements
     const pencilToolBtn = document.getElementById("pencilButton");
     const eraserToolBtn = document.getElementById("eraserButton");
     const colorPicker = document.getElementById("colorPicker");
+    const panSlider = document.getElementById("panSlider");
+    const viewport = document.getElementById("whiteboardViewport");
 
     // Canvas and canvas context
     const canvas = document.getElementById('whiteboard');
@@ -264,10 +269,30 @@
 
         // Redraw any saved lines that would have been wiped when the canvas resized
         redrawAllLines();
+
+        // If the viewport is wide enough, hide the pan slider since it's not needed, otherwise show it
+        if(viewport.clientWidth >= 1200) {
+            panSlider.classList.add("hide");
+            panSlider.classList.remove("show");
+        } else {
+            panSlider.classList.remove("hide");
+            panSlider.classList.add("show");
+        }
     }
 
     // Resize the canvas whenever the window resizes
     window.addEventListener('resize', resizeCanvas);
+
+    // Update the viewport scroll position based on the slider value
+    function updatePan() {
+        const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+
+        viewport.scrollLeft = maxScroll * (panSlider.valueAsNumber / 100);
+    }
+    panSlider.addEventListener("input", updatePan);
+
+    // Since the slider starts at 50, we need to call this on load to update the viewport to show the center of the canvas
+    updatePan();
 
     // Do a one-time canvas resize to fit the current window at launch
     resizeCanvas();
