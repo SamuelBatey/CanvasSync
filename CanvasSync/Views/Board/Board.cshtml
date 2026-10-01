@@ -84,11 +84,15 @@
     });
 
     canvas.addEventListener('pointerup', async () => {
-        await finishLine();
+		if(drawing) {
+			await finishLine();
+		}
     });
 
     canvas.addEventListener('pointerleave', async () => {
-        await finishLine();
+		if(drawing){
+			await finishLine();
+		}
     });
 
     canvas.addEventListener('pointermove', (e) => {
