@@ -18,7 +18,8 @@ builder.Services.AddDbContext<BoardContext>(options =>
     }));
 
 builder.Services.AddSignalR();
-builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]!);
+if(!builder.Environment.IsDevelopment())
+    builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration["Azure:SignalR:ConnectionString"]!);
 
 var app = builder.Build();
 
