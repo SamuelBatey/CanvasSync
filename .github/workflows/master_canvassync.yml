@@ -67,6 +67,10 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_3A530B4FB7804FA69A9427C39C1EBD62 }}
         run: |
           ./efbundle.exe --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}"
+      
+      - name: Remove EF migration bundle
+        shell: pwsh
+        run: Remove-Item ./efbundle.exe -Force
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
